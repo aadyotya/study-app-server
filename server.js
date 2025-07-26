@@ -1,78 +1,115 @@
 const express = require('express');
+
 const bodyParser = require('body-parser');
+
 const cors = require('cors');
 
+
+
 const app = express();
+
 const PORT = process.env.PORT || 3000;
 
+
+
 // This object will store the most recent data for each user
+
 let roomData = {};
-let chatHistory = []; // NEW: Array to store chat messages
+
+
 
 app.use(cors());
+
 app.use(bodyParser.json());
 
+
+
 // This endpoint is where your browser will send its status updates
+
 app.post('/update', (req, res) => {
-  const { userId, data } = req.body;
-  if (!userId || !data) {
-    return res.status(400).send('Invalid data');
-  }
-  
-  // Store the latest data for this user, along with a timestamp
-  roomData[userId] = {
-    data: data,
-    lastUpdated: Date.now()
-  };
-  
-  res.sendStatus(200);
+
+  const { userId, data } = req.body;
+
+  if (!userId || !data) {
+
+    return res.status(400).send('Invalid data');
+
+  }
+
+  
+
+  // Store the latest data for this user, along with a timestamp
+
+  roomData[userId] = {
+
+    data: data,
+
+    lastUpdated: Date.now()
+
+  };
+
+  
+
+  res.sendStatus(200);
+
 });
+
+
 
 // This endpoint is where your browser will ask for your girlfriend's status
+
 app.get('/status', (req, res) => {
-  const { userId } = req.query;
-  let otherUserData = null;
 
-  // Find the other user's data in the room
-  for (const id in roomData) {
-    if (id !== userId) {
-      otherUserData = roomData[id].data;
-      break;
-    }
-  }
-  
-  res.json({ otherUser: otherUserData });
+  const { userId } = req.query;
+
+  let otherUserData = null;
+
+
+
+  // Find the other user's data in the room
+
+  for (const id in roomData) {
+
+    if (id !== userId) {
+
+      otherUserData = roomData[id].data;
+
+      break;
+
+    }
+
+  }
+
+  
+
+  res.json({ otherUser: otherUserData });
+
 });
 
-// NEW: Endpoint to receive a new chat message
-app.post('/chat', (req, res) => {
-    const message = req.body;
-    if (!message || !message.text || !message.senderId) {
-        return res.status(400).send('Invalid message');
-    }
-    chatHistory.push(message);
-    // Keep history to a reasonable size to save memory
-    if (chatHistory.length > 50) {
-        chatHistory.shift();
-    }
-    res.sendStatus(201); // Status for "Created"
-});
 
-// NEW: Endpoint for browsers to get the entire chat history
-app.get('/chat', (req, res) => {
-    res.json(chatHistory);
-});
 
 // A simple cleanup routine to remove users who have been inactive for over a minute
+
 setInterval(() => {
-    const now = Date.now();
-    for (const userId in roomData) {
-        if (now - roomData[userId].lastUpdated > 60000) { // 60 seconds
-            delete roomData[userId];
-        }
-    }
+
+    const now = Date.now();
+
+    for (const userId in roomData) {
+
+        if (now - roomData[userId].lastUpdated > 60000) { // 60 seconds
+
+            delete roomData[userId];
+
+        }
+
+    }
+
 }, 10000); // Check every 10 seconds
 
+
+
 app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+
+  console.log(`Server listening on port ${PORT}`);
+
 });
